@@ -799,7 +799,11 @@ def batch(config_file, create_batch, batch_dir):
     config_dict = read_config(config_file)
     options = config_dict.pop('OPTIONS')
     global_atts = config_dict.pop('GLOBAL_ATTRIBUTES')
-    domain_dict = config_dict.pop('DOMAIN')
+    try:
+        domain_dict = config_dict.pop('DOMAIN')
+        domain_avail = 1
+    except KeyError:
+        domain_avail = 0
     fields = config_dict
 
     config = SafeConfigParser()
@@ -835,17 +839,18 @@ def batch(config_file, create_batch, batch_dir):
             config.set('GLOBAL_ATTRIBUTES', option, str(value))
 
         # domain dict section
-        config.add_section('DOMAIN')
-        for option, value in domain_dict.iteritems():
-            if type(value) == list:
-                try:
-                    value = ", ".join(value)
-                except TypeError:
-                    value = ", ".join( repr(e) for e in value)
-            elif type(value) != str:
-                value = str(value)
-
-            config.set('DOMAIN', option, value.strip("'"))
+        if domain_avail==1:
+            config.add_section('DOMAIN')
+            for option, value in domain_dict.iteritems():
+                if type(value) == list:
+                    try:
+                        value = ", ".join(value)
+                    except TypeError:
+                        value = ", ".join( repr(e) for e in value)
+                elif type(value) != str:
+                    value = str(value)
+    
+                config.set('DOMAIN', option, value.strip("'"))
 
         for var, field in fields.iteritems():
             suffix="_%s.cfg" %var
